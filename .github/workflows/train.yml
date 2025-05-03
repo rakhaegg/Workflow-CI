@@ -53,22 +53,23 @@ jobs:
         echo "enc_path=$(find $RUN_DIR/artifacts/model -name '*encoder.pkl' | head -n1)" >> $GITHUB_OUTPUT
     - name: Install gdrive
       run: |
-        curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.0/gdrive-linux-amd64 \
+        # unduh BINARY langsung (± 3 MB)
+        curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.0/gdrive-linux-x64 \
          -o /usr/local/bin/gdrive
         chmod +x /usr/local/bin/gdrive
-        /usr/local/bin/gdrive version         # debug: harus tampil "gdrive 2.1.0"
         echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
-      env:
-        GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
     # asdas
     # simpan Service‑Account JSON
         
+      env:
+        GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
+
     - name: Upload artefact to Drive
       env:
         FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
       run: |
-        FILE="${{ steps.getrun.outputs.model_path }}"
-        gdrive --service-account /tmp/sa.json files upload --parent "$FOLDER_ID" "$FILE"
+        /usr/local/bin/gdrive --service-account /tmp/sa.json files upload \
+          --parent "$FOLDER_ID" "${{ steps.getrun.outputs.model_path }}"
 
     # 8.  Build Docker image berisi model
     - name: Build Docker image
