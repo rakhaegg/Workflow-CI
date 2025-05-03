@@ -37,8 +37,8 @@ mlruns/
 *.tsv
 *.zip
 *.gz
-namadataset_raw/
-namadataset_preprocessing/
+# namadataset_raw/
+# namadataset_preprocessing/
 
 # =========================
 #  Model artefacts
