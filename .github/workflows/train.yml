@@ -61,7 +61,21 @@ jobs:
         gdown --folder $GDRIVE_TOKEN --upload \
               "${{ steps.getrun.outputs.model_path }}" \
               --parent $GDRIVE_FOLDER
+    - name: Install gdrive
+      run: |
+        curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.1/gdrive-linux-x64 \
+          -o /usr/local/bin/gdrive
+        chmod +x /usr/local/bin/gdrive
+        echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
 
+    # ─── Upload artefact via gdrive ───────────────────────────────────
+    - name: Upload model artefact to Google Drive
+      env:
+        FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+      run: |
+        FILE="${{ steps.getrun.outputs.model_path }}"
+        /usr/local/bin/gdrive --service-account /tmp/sa.json \
+            files upload --parent "$FOLDER_ID" "$FILE"
 
     # 8.  Build Docker image berisi model
     - name: Build Docker image
