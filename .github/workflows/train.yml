@@ -1,48 +1,96 @@
-name: retrain_model
+name: retrain_and_docker
 
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'MLProject/**'
-  workflow_dispatch:        # manual trigger
+    paths: [ 'MLProject/**' ]
+  workflow_dispatch:
 
 jobs:
   train:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
+    env:
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/demand-forecast:latest
+
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    # ──────────────────────────────────────────────────────────
+    - name: Run actions/checkout@v3
+      uses: actions/checkout@v3
 
-    # -------- Optional: cache conda env ------------
-    - name: Cache Conda
-      uses: actions/cache@v4
+    - name: Set up Python 3.12.7
+      uses: actions/setup-python@v5
       with:
-        path: ~/conda_pkgs_dir
-        key: ${{ runner.os }}-conda-${{ hashFiles('MLProject/conda.yaml') }}
+        python-version: "3.12.7"
 
-    # -------- Install Micromamba & env -------------
-    - name: Setup micromamba
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        environment-file: MLProject/conda.yaml
-        init-shell: bash
-        cache-downloads: true
+    - name: Check Env
+      run: |
+        python -V
+        echo "Runner: $RUNNER_OS $RUNNER_ARCH"
 
-    # -------- Run MLflow Project -------------------
-    - name: Run training
-      shell: bash -l {0}
+    # ----------------------------------------------------------
+    - name: Install dependencies
+      run: |
+        pip install -r MLProject/requirements.txt
+
+    - name: Run mlflow project
       run: |
         cd MLProject
         mlflow run . -P num_boost_round=300
-        echo "Listing artifacts..."
-        ls -R .
+        cd ..
 
-    # -------- Upload model artefact ----------------
-    - name: Upload model
-      uses: actions/upload-artifact@v4
+    # ----------------------------------------------------------
+    #  Get latest run_id & copy artefak model
+    - name: Get latest MLflow run_id
+      id: getrun
+      run: |
+        RUN_DIR=$(ls -td MLProject/mlruns/*/* | head -n1)
+        echo "run_dir=$RUN_DIR" >> $GITHUB_OUTPUT
+        MODEL_PATH=$(find $RUN_DIR/artifacts/model -name "*.json" | head -n1)
+        echo "model_path=$MODEL_PATH" >> $GITHUB_OUTPUT
+
+    # ----------------------------------------------------------
+    - name: Install Python dependencies (uploader)
+      run: pip install --quiet gdown
+
+    - name: Upload model artefact to Google Drive
+      env:
+        GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+      run: |
+        gdown --folder $GDRIVE_TOKEN --upload \
+              "${{ steps.getrun.outputs.model_path }}" \
+              --parent <DRIVE_FOLDER_ID>
+
+    # ==========================================================
+    #               Build & Push Docker image
+    # ==========================================================
+    # 1) Copy inference script + model into docker‑context
+    - name: Build Docker Model
+      run: |
+        mkdir docker_ctx
+        cp Monitoring\ dan\ Logging/7.inference.py docker_ctx/
+        cp "${{ steps.getrun.outputs.model_path }}" docker_ctx/xgb_gpu.json
+        cp MLProject/models/ohe_encoder.pkl docker_ctx/ohe_encoder.pkl
+        # generate Dockerfile
+        cat <<'EOF' > docker_ctx/Dockerfile
+        FROM python:3.12-slim
+        WORKDIR /app
+        COPY . /app
+        RUN pip install fastapi uvicorn[standard] xgboost==2.0.* scikit-learn==1.5.* pandas==2.2.* joblib==1.4.*
+        EXPOSE 8000
+        CMD ["uvicorn", "inference:app", "--host", "0.0.0.0", "--port", "8000"]
+        EOF
+        docker build -t $IMAGE_NAME docker_ctx
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
       with:
-        name: best_xgb_gpu
-        path: MLProject/models/best_xgb_gpu.json
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Tag Docker Image
+      run: docker tag $IMAGE_NAME $IMAGE_NAME
+
+    - name: Push Docker Image
+      run: docker push $IMAGE_NAME
