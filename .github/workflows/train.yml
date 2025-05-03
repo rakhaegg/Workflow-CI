@@ -13,6 +13,8 @@ jobs:
 
     env:
       IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/demand-forecast:latest
+      GDRIVE_FOLDER: ${{ secrets.DRIVE_FOLDER_ID }}
+
 
     steps:
     # 1.  Checkout repo
@@ -58,7 +60,8 @@ jobs:
         pip install --quiet gdown
         gdown --folder $GDRIVE_TOKEN --upload \
               "${{ steps.getrun.outputs.model_path }}" \
-              --parent <DRIVE_FOLDER_ID>
+              --parent $GDRIVE_FOLDER
+
 
     # 8.  Build Docker image berisi model
     - name: Build Docker image
