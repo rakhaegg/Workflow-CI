@@ -53,17 +53,16 @@ jobs:
         echo "enc_path=$(find $RUN_DIR/artifacts/model -name '*encoder.pkl' | head -n1)" >> $GITHUB_OUTPUT
     - name: Install gdrive
       run: |
-        # unduh BINARY langsung (± 3 MB)
-        curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.0/gdrive-linux-x64 \
+        curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.0/gdrive-linux-amd64 \
          -o /usr/local/bin/gdrive
         chmod +x /usr/local/bin/gdrive
+        /usr/local/bin/gdrive version         # debug: harus tampil "gdrive 2.1.0"
         echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
+      env:
+        GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
     # asdas
     # simpan Service‑Account JSON
         
-      env:
-        GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
-
     - name: Upload artefact to Drive
       env:
         FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
