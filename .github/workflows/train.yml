@@ -57,9 +57,10 @@ jobs:
         curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.0/gdrive-linux-x64 \
          -o /usr/local/bin/gdrive
         chmod +x /usr/local/bin/gdrive
+        echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
     # asdas
     # simpan Service‑Account JSON
-        echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
+        
       env:
         GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
 
