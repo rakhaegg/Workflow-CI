@@ -15,51 +15,43 @@ jobs:
       IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/demand-forecast:latest
 
     steps:
-    # 1️⃣  Checkout
+    # 1.  Checkout repo
     - uses: actions/checkout@v3
 
-    # 2️⃣  Micromamba + env dari conda.yaml
-    - name: Setup micromamba
-      uses: mamba-org/setup-micromamba@v1
+    # 2.  Setup Python 3.12.7
+    - name: Set up Python 3.12.7
+      uses: actions/setup-python@v5
       with:
-        environment-file: MLProject/conda.yaml
-        init-shell: bash    # ← tambahkan ke ~/.bashrc
-        cache-downloads: true
-        cache-env: true
+        python-version: "3.12.7"
 
-    # 3️⃣  Check env
+    # 3.  Check Env
     - name: Check Env
-      shell: bash -l {0}
       run: |
-        echo "✔ python=$(python -V)"
-        echo "✔ which conda=$(which micromamba || true)"
-        conda list | head -n 5
+        python -V
+        echo "Runner: $RUNNER_OS $RUNNER_ARCH"
 
-    # 4️⃣  Set MLflow Tracking URI (local)
-    - name: Set MLflow Tracking URI
-      shell: bash -l {0}
-      run: echo "MLFLOW_TRACKING_URI=file:./mlruns" >> "$GITHUB_ENV"
+    # 4.  Install dependencies once (pip)
+    - name: Install dependencies
+      run: |
+        pip install -r MLProject/requirements.txt
 
-    # 5️⃣  Run mlflow project  (shell login -l penting!)
+    # 5.  Run MLflow Project using *local* env  ←  ⏩ TANPA Conda ⏩
     - name: Run mlflow project
-      shell: bash -l {0}
       run: |
         cd MLProject
-        mlflow run . -P num_boost_round=300
+        mlflow run . -P num_boost_round=300 --env-manager=local
 
-    # 6️⃣  Grab latest artefact path
+    # 6.  Locate latest model artefact
     - name: Get latest MLflow run_id
       id: getrun
-      shell: bash -l {0}
       run: |
         RUN_DIR=$(ls -td MLProject/mlruns/*/* | head -n1)
         echo "run_dir=$RUN_DIR" >> $GITHUB_OUTPUT
         echo "model_path=$(find $RUN_DIR/artifacts/model -name '*.json' | head -n1)" >> $GITHUB_OUTPUT
         echo "enc_path=$(find $RUN_DIR/artifacts/model -name '*encoder.pkl' | head -n1)" >> $GITHUB_OUTPUT
 
-    # 7️⃣  Upload ke Google Drive
-    - name: Install uploader deps & upload
-      shell: bash -l {0}
+    # 7.  Upload ke Google Drive
+    - name: Upload artefact to Google Drive
       env:
         GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
       run: |
@@ -68,14 +60,13 @@ jobs:
               "${{ steps.getrun.outputs.model_path }}" \
               --parent <DRIVE_FOLDER_ID>
 
-    # 8️⃣  Build Docker
+    # 8.  Build Docker image berisi model
     - name: Build Docker image
-      shell: bash -l {0}
       run: |
         mkdir docker_ctx
         cp Monitoring\ dan\ Logging/7.inference.py docker_ctx/
         cp "${{ steps.getrun.outputs.model_path }}" docker_ctx/xgb_gpu.json
-        cp "${{ steps.getrun.outputs.enc_path }}"  docker_ctx/ohe_encoder.pkl
+        cp "${{ steps.getrun.outputs.enc_path }}" docker_ctx/ohe_encoder.pkl
         cat <<'EOF' > docker_ctx/Dockerfile
         FROM python:3.12-slim
         WORKDIR /app
@@ -86,7 +77,7 @@ jobs:
         EOF
         docker build -t $IMAGE_NAME docker_ctx
 
-    # 9️⃣  Login & push DockerHub
+    # 9.  Push ke Docker Hub
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
