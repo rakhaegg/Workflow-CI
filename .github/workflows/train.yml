@@ -52,7 +52,6 @@ jobs:
         echo "model_path=$(find $RUN_DIR/artifacts/model -name '*.json' | head -n1)" >> $GITHUB_OUTPUT
         echo "enc_path=$(find $RUN_DIR/artifacts/model -name '*encoder.pkl' | head -n1)" >> $GITHUB_OUTPUT
 
-    # 7.  Upload ke Google Drive
     - name: Install gdrive
       run: |
         # unduh BINARY langsung (± 3 MB)
