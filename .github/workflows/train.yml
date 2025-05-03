@@ -61,7 +61,7 @@ jobs:
         chmod +x /usr/local/bin/gdrive
     # asdas
     # simpan Service‑Account JSON
-      echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
+        echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
       env:
         GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
 
