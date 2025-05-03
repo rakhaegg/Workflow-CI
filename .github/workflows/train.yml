@@ -60,8 +60,8 @@ jobs:
         chmod +x gdrive
         sudo mv gdrive /usr/local/bin/
         echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
-  env:
-    GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
+      env:
+        GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
 
     - name: Upload artefact to Drive
       env:
