@@ -51,7 +51,6 @@ jobs:
         echo "run_dir=$RUN_DIR" >> $GITHUB_OUTPUT
         echo "model_path=$(find $RUN_DIR/artifacts/model -name '*.json' | head -n1)" >> $GITHUB_OUTPUT
         echo "enc_path=$(find $RUN_DIR/artifacts/model -name '*encoder.pkl' | head -n1)" >> $GITHUB_OUTPUT
-
     - name: Install gdrive
       run: |
         # unduh BINARY langsung (± 3 MB)
