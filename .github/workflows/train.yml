@@ -68,8 +68,8 @@ jobs:
       env:
         FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
       run: |
-        /usr/local/bin/gdrive --service-account /tmp/sa.json files upload \
-          --parent "$FOLDER_ID" "${{ steps.getrun.outputs.model_path }}"
+        FILE="${{ steps.getrun.outputs.model_path }}"
+        gdrive --service-account /tmp/sa.json files upload --parent "$FOLDER_ID" "$FILE"
 
     # 8.  Build Docker image berisi model
     - name: Build Docker image
