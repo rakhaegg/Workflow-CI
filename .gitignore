@@ -32,11 +32,11 @@ mlruns/
 # =========================
 #  Dataset & artefak besar
 # =========================
-*.parquet
-*.csv
-*.tsv
-*.zip
-*.gz
+# *.parquet
+# *.csv
+# *.tsv
+# *.zip
+# *.gz
 # namadataset_raw/
 # namadataset_preprocessing/
 
