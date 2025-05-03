@@ -55,11 +55,13 @@ jobs:
     # 7.  Upload ke Google Drive
     - name: Install gdrive
       run: |
-        curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.1/gdrive-linux-x64.tar.gz -o gdrive.tar.gz
-        tar -xzf gdrive.tar.gz
-        chmod +x gdrive
-        sudo mv gdrive /usr/local/bin/
-        echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
+        # unduh BINARY langsung (± 3 MB)
+        curl -L https://github.com/prasmussen/gdrive/releases/download/2.1.0/gdrive-linux-x64 \
+         -o /usr/local/bin/gdrive
+        chmod +x /usr/local/bin/gdrive
+
+    # simpan Service‑Account JSON
+      echo "$GDRIVE_SERVICE_JSON" > /tmp/sa.json
       env:
         GDRIVE_SERVICE_JSON: ${{ secrets.GDRIVE_SERVICE_JSON }}
 
