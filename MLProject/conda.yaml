@@ -1,0 +1,14 @@
+name: wf_mlflow_xgb_gpu
+channels:
+  - conda-forge
+  - nvidia           # wheel GPU via pip but CUDA libs via conda
+dependencies:
+  - python=3.11
+  - conda-forge::cudatoolkit=11.8.0    # match driver
+  - pip
+  - pip:
+      - pandas==2.2.3 
+      - scikit-learn==1.6.1
+      - mlflow==2.22.0
+      - xgboost==3.0.0
+      - joblib==1.4.2

@@ -1,0 +1,48 @@
+name: retrain_model
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'MLProject/**'
+  workflow_dispatch:        # manual trigger
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    # -------- Optional: cache conda env ------------
+    - name: Cache Conda
+      uses: actions/cache@v4
+      with:
+        path: ~/conda_pkgs_dir
+        key: ${{ runner.os }}-conda-${{ hashFiles('MLProject/conda.yaml') }}
+
+    # -------- Install Micromamba & env -------------
+    - name: Setup micromamba
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        environment-file: MLProject/conda.yaml
+        init-shell: bash
+        cache-downloads: true
+
+    # -------- Run MLflow Project -------------------
+    - name: Run training
+      shell: bash -l {0}
+      run: |
+        cd MLProject
+        mlflow run . -P num_boost_round=300
+        echo "Listing artifacts..."
+        ls -R .
+
+    # -------- Upload model artefact ----------------
+    - name: Upload model
+      uses: actions/upload-artifact@v4
+      with:
+        name: best_xgb_gpu
+        path: MLProject/models/best_xgb_gpu.json

@@ -1,0 +1,10 @@
+name: demand_forecast_xgb
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      num_boost_round: {type: int, default: 300}
+    command: >
+      python modelling.py --num_boost_round {num_boost_round}

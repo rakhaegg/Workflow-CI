@@ -1,0 +1,61 @@
+# =========================
+#  Core Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# =========================
+#  Conda / Mamba environments
+# =========================
+.env/
+.conda/
+env/
+venv/
+*.conda
+*.env
+
+# =========================
+#  MLflow
+# =========================
+mlruns/
+.cache/               # pipeline cache_dir (sklearn)
+.cache_dir/
+
+# =========================
+#  Dataset & artefak besar
+# =========================
+*.parquet
+*.csv
+*.tsv
+*.zip
+*.gz
+namadataset_raw/
+namadataset_preprocessing/
+
+# =========================
+#  Model artefacts
+# =========================
+models/
+*.pkl
+*.joblib
+*.json
+
+# =========================
+#  Jupyter / VSCode
+# =========================
+.ipynb_checkpoints/
+.vscode/
+
+# =========================
+#  OS miscellany
+# =========================
+.DS_Store
+Thumbs.db
